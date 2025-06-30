@@ -2,170 +2,63 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Module;
 use App\Models\Permission;
+use Illuminate\Database\Seeder;
 
 class PermissionSeeder extends Seeder
 {
     public function run()
     {
         $permissions = [
-            // Dashboard Module
-            [
-                'name' => 'dashboard.view',
-                'display_name' => 'View Dashboard',
-                'module' => 'Dashboard',
-                'type' => 'view',
-                'description' => 'Access to main dashboard',
-            ],
-            [
-                'name' => 'dashboard.analytics',
-                'display_name' => 'View Analytics',
-                'module' => 'Dashboard',
-                'type' => 'view',
-                'description' => 'Access to analytics dashboard',
-            ],
+            // Dashboard permissions
+            ['name' => 'dashboard.view', 'display_name' => 'Ver Dashboard', 'module' => 'Dashboard', 'type' => 'view'],
+            ['name' => 'dashboard.analytics', 'display_name' => 'Ver Analytics', 'module' => 'Dashboard', 'type' => 'view'],
 
-            // Widget Module
-            [
-                'name' => 'widget.statistics',
-                'display_name' => 'View Statistics',
-                'module' => 'Widget',
-                'type' => 'view',
-                'description' => 'Access to statistics widgets',
-            ],
-            [
-                'name' => 'widget.data',
-                'display_name' => 'View Data',
-                'module' => 'Widget',
-                'type' => 'view',
-                'description' => 'Access to data widgets',
-            ],
-            [
-                'name' => 'widget.chart',
-                'display_name' => 'View Charts',
-                'module' => 'Widget',
-                'type' => 'view',
-                'description' => 'Access to chart widgets',
-            ],
+            // Widget permissions
+            ['name' => 'widget.statistics', 'display_name' => 'Ver Estadísticas', 'module' => 'Widget', 'type' => 'view'],
+            ['name' => 'widget.data', 'display_name' => 'Ver Datos', 'module' => 'Widget', 'type' => 'view'],
+            ['name' => 'widget.chart', 'display_name' => 'Ver Gráficos', 'module' => 'Widget', 'type' => 'view'],
 
-            // Users Module
-            [
-                'name' => 'users.view',
-                'display_name' => 'View Users',
-                'module' => 'Users',
-                'type' => 'view',
-                'description' => 'View user list and details',
-            ],
-            [
-                'name' => 'users.create',
-                'display_name' => 'Create Users',
-                'module' => 'Users',
-                'type' => 'create',
-                'description' => 'Create new users',
-            ],
-            [
-                'name' => 'users.edit',
-                'display_name' => 'Edit Users',
-                'module' => 'Users',
-                'type' => 'edit',
-                'description' => 'Edit existing users',
-            ],
-            [
-                'name' => 'users.delete',
-                'display_name' => 'Delete Users',
-                'module' => 'Users',
-                'type' => 'delete',
-                'description' => 'Delete users',
-            ],
-            [
-                'name' => 'users.roles',
-                'display_name' => 'Manage User Roles',
-                'module' => 'Users',
-                'type' => 'manage',
-                'description' => 'Manage user roles',
-            ],
-            [
-                'name' => 'users.permissions',
-                'display_name' => 'Manage User Permissions',
-                'module' => 'Users',
-                'type' => 'manage',
-                'description' => 'Manage user permissions',
-            ],
+            // Users permissions
+            ['name' => 'users.view', 'display_name' => 'Ver Usuarios', 'module' => 'Users', 'type' => 'view'],
+            ['name' => 'users.create', 'display_name' => 'Crear Usuarios', 'module' => 'Users', 'type' => 'create'],
+            ['name' => 'users.edit', 'display_name' => 'Editar Usuarios', 'module' => 'Users', 'type' => 'edit'],
+            ['name' => 'users.delete', 'display_name' => 'Eliminar Usuarios', 'module' => 'Users', 'type' => 'delete'],
+            ['name' => 'users.roles', 'display_name' => 'Gestionar Roles', 'module' => 'Users', 'type' => 'manage'],
+            ['name' => 'users.permissions', 'display_name' => 'Gestionar Permisos', 'module' => 'Users', 'type' => 'manage'],
 
-            // Application Module
-            [
-                'name' => 'customers.view',
-                'display_name' => 'View Customers',
-                'module' => 'Application',
-                'type' => 'view',
-                'description' => 'View customer list',
-            ],
-            [
-                'name' => 'customers.details',
-                'display_name' => 'View Customer Details',
-                'module' => 'Application',
-                'type' => 'view',
-                'description' => 'View customer details',
-            ],
-            [
-                'name' => 'chat.view',
-                'display_name' => 'Access Chat',
-                'module' => 'Application',
-                'type' => 'view',
-                'description' => 'Access chat functionality',
-            ],
-            [
-                'name' => 'kanban.view',
-                'display_name' => 'Access Kanban',
-                'module' => 'Application',
-                'type' => 'view',
-                'description' => 'Access kanban board',
-            ],
-            [
-                'name' => 'mail.view',
-                'display_name' => 'Access Mail',
-                'module' => 'Application',
-                'type' => 'view',
-                'description' => 'Access mail functionality',
-            ],
-            [
-                'name' => 'calendar.view',
-                'display_name' => 'Access Calendar',
-                'module' => 'Application',
-                'type' => 'view',
-                'description' => 'Access calendar functionality',
-            ],
+            // Customers permissions
+            ['name' => 'customers.view', 'display_name' => 'Ver Clientes', 'module' => 'Customer', 'type' => 'view'],
+            ['name' => 'customers.create', 'display_name' => 'Crear Clientes', 'module' => 'Customer', 'type' => 'create'],
+            ['name' => 'customers.edit', 'display_name' => 'Editar Clientes', 'module' => 'Customer', 'type' => 'edit'],
+            ['name' => 'customers.delete', 'display_name' => 'Eliminar Clientes', 'module' => 'Customer', 'type' => 'delete'],
+            ['name' => 'customers.details', 'display_name' => 'Ver Detalles de Clientes', 'module' => 'Customer', 'type' => 'view'],
 
-            // System Module
-            [
-                'name' => 'system.settings',
-                'display_name' => 'System Settings',
-                'module' => 'System',
-                'type' => 'manage',
-                'description' => 'Access system settings',
-            ],
-            [
-                'name' => 'system.logs',
-                'display_name' => 'System Logs',
-                'module' => 'System',
-                'type' => 'view',
-                'description' => 'View system logs',
-            ],
-            [
-                'name' => 'system.backup',
-                'display_name' => 'System Backup',
-                'module' => 'System',
-                'type' => 'manage',
-                'description' => 'Manage system backups',
-            ],
+            // Application permissions
+            ['name' => 'chat.view', 'display_name' => 'Ver Chat', 'module' => 'Application', 'type' => 'view'],
+            ['name' => 'kanban.view', 'display_name' => 'Ver Kanban', 'module' => 'Application', 'type' => 'view'],
+            ['name' => 'mail.view', 'display_name' => 'Ver Correo', 'module' => 'Application', 'type' => 'view'],
+            ['name' => 'calendar.view', 'display_name' => 'Ver Calendario', 'module' => 'Application', 'type' => 'view'],
+
+            // System permissions
+            ['name' => 'system.settings', 'display_name' => 'Configuración del Sistema', 'module' => 'System', 'type' => 'manage'],
+            ['name' => 'system.modules', 'display_name' => 'Gestionar Módulos', 'module' => 'System', 'type' => 'manage'],
         ];
 
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(
-                ['name' => $permission['name']],
-                $permission
-            );
+            // Buscar el módulo correspondiente
+            $module = Module::where('name', $permission['module'])->first();
+
+            Permission::create([
+                'name' => $permission['name'],
+                'display_name' => $permission['display_name'],
+                'module' => $permission['module'],
+                'module_id' => $module?->id,
+                'type' => $permission['type'],
+                'description' => $permission['display_name'],
+                'guard_name' => 'api',
+            ]);
         }
     }
 }
