@@ -59,7 +59,7 @@ class PermissionController extends Controller
             'module_id' => $request->module_id,
             'type' => $request->type,
             'description' => $request->description,
-            'guard_name' => 'web',
+            'guard_name' => 'api',
         ]);
 
         return response()->json([

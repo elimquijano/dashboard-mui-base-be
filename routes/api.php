@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Modules routes
     Route::get('modules/tree', [ModuleController::class, 'tree']);
     Route::get('modules/menu', [ModuleController::class, 'menu']);
+    Route::get('modules/route-config', [ModuleController::class, 'getRouteConfig']);
     Route::apiResource('modules', ModuleController::class);
 
     // Permissions routes

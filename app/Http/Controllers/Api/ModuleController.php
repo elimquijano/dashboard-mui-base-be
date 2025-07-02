@@ -1,60 +1,62 @@
 <?php
+// app/Http/Controllers/ModuleController.php
 
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Module;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class ModuleController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
-        $query = Module::with(['parent', 'children'])
-            ->withCount(['permissions']);
+        $query = Module::with(['parent', 'children']);
+        $paginate = $request->input('paginate', 1000);
 
         // Filtros
         if ($request->has('search')) {
-            $search = $request->get('search');
+            $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('slug', 'like', "%{$search}%");
+                    ->orWhere('slug', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
         if ($request->has('type')) {
-            $query->where('type', $request->get('type'));
+            $query->where('type', $request->type);
         }
 
         if ($request->has('status')) {
-            $query->where('status', $request->get('status'));
+            $query->where('status', $request->status);
         }
 
-        if ($request->has('parent_id')) {
-            $query->where('parent_id', $request->get('parent_id'));
-        }
-
-        $modules = $query->orderBy('sort_order')->get();
+        $modules = $query->orderBy('sort_order')->paginate($paginate);
 
         return response()->json([
             'success' => true,
-            'data' => $modules
+            'data' => $modules,
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:modules',
             'description' => 'nullable|string',
             'icon' => 'nullable|string',
-            'sort_order' => 'integer|min:0',
+            'route' => 'nullable|string',
+            'component' => 'nullable|string',
+            'permission' => 'nullable|string',
+            'sort_order' => 'integer',
             'parent_id' => 'nullable|exists:modules,id',
             'type' => 'required|in:module,group,page,button',
             'status' => 'required|in:active,inactive',
+            'show_in_menu' => 'boolean',
+            'auto_create_permissions' => 'boolean',
         ]);
 
         $module = Module::create($request->all());
@@ -62,29 +64,34 @@ class ModuleController extends Controller
         return response()->json([
             'success' => true,
             'data' => $module->load(['parent', 'children']),
-            'message' => 'Module created successfully'
+            'message' => 'Módulo creado exitosamente',
         ], 201);
     }
 
-    public function show(Module $module): JsonResponse
+    public function show(Module $module)
     {
         return response()->json([
             'success' => true,
-            'data' => $module->load(['parent', 'children', 'permissions'])
+            'data' => $module->load(['parent', 'children', 'permissions']),
         ]);
     }
 
-    public function update(Request $request, Module $module): JsonResponse
+    public function update(Request $request, Module $module)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:modules,slug,' . $module->id,
             'description' => 'nullable|string',
             'icon' => 'nullable|string',
-            'sort_order' => 'integer|min:0',
+            'route' => 'nullable|string',
+            'component' => 'nullable|string',
+            'permission' => 'nullable|string',
+            'sort_order' => 'integer',
             'parent_id' => 'nullable|exists:modules,id',
             'type' => 'required|in:module,group,page,button',
             'status' => 'required|in:active,inactive',
+            'show_in_menu' => 'boolean',
+            'auto_create_permissions' => 'boolean',
         ]);
 
         $module->update($request->all());
@@ -92,55 +99,40 @@ class ModuleController extends Controller
         return response()->json([
             'success' => true,
             'data' => $module->load(['parent', 'children']),
-            'message' => 'Module updated successfully'
+            'message' => 'Módulo actualizado exitosamente',
         ]);
     }
 
-    public function destroy(Module $module): JsonResponse
+    public function destroy(Module $module)
     {
-        // Verificar si tiene hijos
-        if ($module->children()->count() > 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot delete module with children'
-            ], 422);
-        }
-
         $module->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Module deleted successfully'
+            'message' => 'Módulo eliminado exitosamente',
         ]);
     }
 
-    public function tree(): JsonResponse
+    public function tree()
     {
         $modules = Module::getTree();
 
         return response()->json([
             'success' => true,
-            'data' => $modules
+            'data' => $modules,
         ]);
     }
 
-    public function menu(Request $request): JsonResponse
+    public function menu()
     {
-        $user = $request->user();
+        $user = Auth::user();
+        $modules = Module::getMenuTree();
 
-        // Obtener módulos activos con sus permisos
-        $modules = Module::with(['children.children.children'])
-            ->whereNull('parent_id')
-            ->where('status', 'active')
-            ->orderBy('sort_order')
-            ->get();
-
-        // Filtrar módulos basado en permisos del usuario
         $filteredModules = $this->filterModulesByPermissions($modules, $user);
 
         return response()->json([
             'success' => true,
-            'data' => $filteredModules
+            'data' => $filteredModules,
         ]);
     }
 
@@ -148,49 +140,55 @@ class ModuleController extends Controller
     {
         return $modules->filter(function ($module) use ($user) {
             // Si el módulo tiene un permiso específico, verificarlo
-            $permission = $this->getModulePermission($module);
-
-            if ($permission && !$user->can($permission)) {
+            if ($module->permission && !$user->can($module->permission)) {
                 return false;
             }
 
-            // Filtrar hijos recursivamente
-            if ($module->children) {
+            // Si es un grupo o módulo, verificar si tiene hijos con permisos
+            if (in_array($module->type, ['module', 'group'])) {
                 $filteredChildren = $this->filterModulesByPermissions($module->children, $user);
                 $module->setRelation('children', $filteredChildren);
 
-                // Si no tiene hijos visibles y es un grupo, ocultarlo
-                if ($module->type === 'group' && $filteredChildren->isEmpty()) {
-                    return false;
-                }
+                // Solo mostrar si tiene hijos visibles o si es una página con permisos
+                return $filteredChildren->count() > 0 ||
+                    ($module->type === 'page' && (!$module->permission || $user->can($module->permission)));
+            }
+
+            // Para páginas, verificar permiso específico o permiso por defecto
+            if ($module->type === 'page') {
+                $permission = $module->permission ?: "{$module->slug}.view";
+                return $user->can($permission);
             }
 
             return true;
         })->values();
     }
 
-    private function getModulePermission($module)
+    public function getRouteConfig()
     {
-        // Mapear slugs de módulos a permisos
-        $permissionMap = [
-            'dashboard.default' => 'dashboard.view',
-            'dashboard.analytics' => 'dashboard.analytics',
-            'widget.statistics' => 'widget.statistics',
-            'widget.data' => 'widget.data',
-            'widget.chart' => 'widget.chart',
-            'users.list' => 'users.view',
-            'users.roles' => 'users.roles',
-            'users.permissions' => 'users.permissions',
-            'customers.list' => 'customers.view',
-            'customers.details' => 'customers.details',
-            'chat' => 'chat.view',
-            'kanban' => 'kanban.view',
-            'mail' => 'mail.view',
-            'calendar' => 'calendar.view',
-            'system.modules' => 'system.modules',
-            'system.settings' => 'system.settings',
-        ];
+        $modules = Module::where('status', 'active')
+            ->whereNotNull('route')
+            ->whereNotNull('component')
+            ->orderBy('sort_order')
+            ->get();
 
-        return $permissionMap[$module->slug] ?? null;
+        $routeConfig = [];
+
+        foreach ($modules as $module) {
+            $routeConfig[] = [
+                'path' => $module->route,
+                'component' => $module->component,
+                'permission' => $module->permission ?: "{$module->slug}.view",
+                'name' => $module->name,
+                'slug' => $module->slug,
+                'type' => $module->type,
+                'show_in_menu' => $module->show_in_menu,
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $routeConfig,
+        ]);
     }
 }

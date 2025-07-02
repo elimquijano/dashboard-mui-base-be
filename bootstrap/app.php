@@ -4,6 +4,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
+use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
@@ -17,4 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create();
+    })->withSingletons([
+        // Aquí le decimos a Laravel que cuando necesite el "contrato" o la
+        // interfaz del Kernel de Consola, debe usar nuestra clase personalizada.
+        ConsoleKernel::class => App\Console\Kernel::class,
+    ])->create();
